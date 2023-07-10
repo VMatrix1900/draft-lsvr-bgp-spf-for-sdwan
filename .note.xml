@@ -1,0 +1,7 @@
+<note title="Discussion Venues" removeInRFC="true">
+<t>Discussion of this document takes place on the
+    Link State Vector Routing Working Group mailing list (lsvr@ietf.org),
+    which is archived at <eref target="https://mailarchive.ietf.org/arch/browse/lsvr/"/>.</t>
+<t>Source for this draft and an issue tracker can be found at
+    <eref target="https://github.com/VMatrix1900/draft-lsvr-bgp-spf-for-sdwan"/>.</t>
+</note>
