@@ -7,7 +7,7 @@ lang: en
 
 title: Usage of BGP-LS-SPF in Multi-segment SD-WAN
 abbrev: BGP-LS-SPF for Multi-segment SD-WAN
-docname: draft-sheng-lsvr-bgp-spf-for-sdwan-latest
+docname: draft-sheng-lsvr-bgp-spf-for-sdwan-00
 obsoletes:
 updates:
 # date: 2022-02-02 -- date is filled in automatically by xml2rfc if not given
@@ -69,20 +69,20 @@ This specification reuses terms defined in {{Section 5.2 of ?I-D.draft-ietf-lsvr
 
 ~~~
       + - - - +- - - - - - - - - - - -|RR| - - - - - - - - - -+ - - - - +
-      |       |                        |                      |         | 
+      |       |                        |                      |         |
       |    +--|--+                  +--|--+                +--|--+      |
       |    | GW1 |------------------| GW2 | -Physical link-| GW3 |      |
       |    +--|--+10.1.1.1  20.1.1.1+-----+                +--|--+      |
       |       |     SD-WAN Tunnel  /                 Physical |30.1.1.1 |
-      |       |    ----------------                      Link |         | 
-      |       |   / over Internet                             |40.1.1.1 | 
-      |    +--|--+                                         +--|--+      | 
-      |+--+| GW5 |---------SD-WAN Tunnel over MPLS---------| GW4 |+-----+ 
-           +--|--+                                         +--|--+ 
+      |       |    ----------------                      Link |         |
+      |       |   / over Internet                             |40.1.1.1 |
+      |    +--|--+                                         +--|--+      |
+      |+--+| GW5 |---------SD-WAN Tunnel over MPLS---------| GW4 |+-----+
+           +--|--+                                         +--|--+
               |                                               |
-+ - -+      + - -+                                         + - -+     +- - - + 
++ - -+      + - -+                                         + - -+     +- - - +
 |User|------|CPE1|                                         |CPE2|-----| APPs |
-+ - -+      + - -+                                         + - -+     + - - -+    
++ - -+      + - -+                                         + - -+     + - - -+
 ~~~
 {: #pop-gw  title="PoP GWs network"}
 
