@@ -12,8 +12,8 @@ obsoletes:
 updates:
 # date: 2022-02-02 -- date is filled in automatically by xml2rfc if not given
 
-area: routing
-workgroup: LSVR
+area: "Routing"
+workgroup: "Link State Vector Routing"
 
 kw:
   - SDWAN
