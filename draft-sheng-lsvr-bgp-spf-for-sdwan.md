@@ -7,7 +7,7 @@ lang: en
 
 title: Usage of BGP-LS-SPF in Multi-segment SD-WAN
 abbrev: BGP-LS-SPF for Multi-segment SD-WAN
-docname: draft-sheng-lsvr-bgp-spf-for-sdwan-01
+docname: draft-sheng-lsvr-bgp-spf-for-sdwan-latest
 obsoletes:
 updates:
 # date: 2023-10-19 -- date is filled in automatically by xml2rfc if not given
