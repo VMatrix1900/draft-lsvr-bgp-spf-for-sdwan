@@ -1,16 +1,16 @@
 ---
 stand_alone: true
-category: bcp
+category: std
 submissionType: IETF
 ipr: trust200902
 lang: en
 
 title: Usage of BGP-LS-SPF in Multi-segment SD-WAN
 abbrev: BGP-LS-SPF for Multi-segment SD-WAN
-docname: draft-sheng-lsvr-bgp-spf-for-sdwan-latest
+docname: draft-sheng-lsvr-bgp-spf-for-sdwan-01
 obsoletes:
 updates:
-# date: 2022-02-02 -- date is filled in automatically by xml2rfc if not given
+# date: 2023-10-19 -- date is filled in automatically by xml2rfc if not given
 
 area: routing
 workgroup: LSVR
@@ -68,21 +68,21 @@ This specification reuses terms defined in {{Section 5.2 of ?I-D.draft-ietf-lsvr
 # Usage of BGP-LS-SPF in Multi-segment SD-WAN
 
 ~~~
-      + - - - +- - - - - - - - - - - -|RR| - - - - - - - - - -+ - - - - +
-      |       |                        |                      |         |
-      |    +--|--+                  +--|--+                +--|--+      |
-      |    | GW1 |------------------| GW2 | -Physical link-| GW3 |      |
-      |    +--|--+10.1.1.1  20.1.1.1+-----+                +--|--+      |
-      |       |     SD-WAN Tunnel  /                 Physical |30.1.1.1 |
-      |       |    ----------------                      Link |         |
-      |       |   / over Internet                             |40.1.1.1 |
-      |    +--|--+                                         +--|--+      |
-      |+--+| GW5 |---------SD-WAN Tunnel over MPLS---------| GW4 |+-----+
-           +--|--+                                         +--|--+
-              |                                               |
-+ - -+      + - -+                                         + - -+     +- - - +
-|User|------|CPE1|                                         |CPE2|-----| APPs |
-+ - -+      + - -+                                         + - -+     + - - -+
+   + - - - +- - - - - - - - - - - -|RR| - - - - - - - - - -+ - - - - +
+   |       |                        |                      |         |
+   |    +--|--+                  +--|--+                +--|--+      |
+   |    | GW1 |------------------| GW2 | -Physical link-| GW3 |      |
+   |    +--|--+10.1.1.1  20.1.1.1+-----+                +--|--+      |
+   |       |     SD-WAN Tunnel  /                 Physical |30.1.1.1 |
+   |       |    ----------------                      Link |         |
+   |       |   / over Internet                             |40.1.1.1 |
+   |    +--|--+                                         +--|--+      |
+   |+--+| GW5 |---------SD-WAN Tunnel over MPLS---------| GW4 |+-----+
+        +--|--+                                         +--|--+
+           |                                               |
++ - -+   + - -+                                         + - -+   + - -+
+|User|---|CPE1|                                         |CPE2|---|APPs|
++ - -+   + - -+                                         + - -+   + - -+
 ~~~
 {: #pop-gw  title="PoP GWs network"}
 
@@ -92,16 +92,54 @@ GW2-GW3-GW4 are connected through dedicated lines. BGP-LS-SPF neighbors are esta
 
 The BGP-LS-SPF LINK NLRI is used to carry the two endpoint IP address of the SD-WAN tunnel or dedicated lines. The BGP-LS-SPF NODE NLRI is used to carry PoP GW device node identification. They are advertised to other GWs through the RR. In this way, all GW learns the topology of whole PoP GWs network and can calculate the next hop to any other GW using Dijkstra Algorithm.
 
+# Extensions to BGP-LS
+
+The link could be Overlay link (Such as Internet, MPLS, LTE etc.,) and Underlay/Physical link (Such as Dedicated line, Direct link etc.,). Different customer may require different types of link. For example, FinTech customer has very high security requirement and would like to exclude Internet and LTE, only use MPLS or Dedicated line; some customer only wants to use the Dedicated line/Direct link to get the highest quality path; some customer prefers to use LTE only as backup link to save the cost. The calculation of these customized SD-WAN path needs to include or exclude one or more specific link types, therefore, when SD-WAN link information is advertised through BGP-LS-SPF Link NLRI, the SD-WAN link type needs to be explicitly indicated.
+
+In this document, a new BGP-LS-SPF Attribute TLV of the BGP-LS-SPF Link NLRI is added to identify a SD-WAN link type, called Link-Type TLV. The format of the Link-Type TLV is defined as follows:
+
+~~~
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |              Type             |             Length            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |   Link-Type   | 
+       +-+-+-+-+-+-+-+-+
+~~~
+{: #link-type-tlv  title="Link-Type TLV Format"}
+
+where:
+Type: TBA
+
+Length: Specifies the length of the value field (i.e., not including Type and Length fields) in terms of octets. The value MUST be 1.
+
+Link-Type:
+
+- 0: Reserved
+- 1: Physical/Dedicated Line/Direct link
+- 2: Internet
+- 3: MPLS
+- 4: LTE
+
+This BGP-LS-SPF Attribute TLV of the BGP-LS-SPF Link NLRI is defined to indicate the Link-Type of the SD-WAN link.
+
 # Security Considerations
 
 This document does not introduce any new security considerations.
 
 # IANA Considerations
 
-This document has no IANA actions.
+TBD.
 
 --- back
 
 # Acknowledgements
 
 The authors would like to thank Donglei Pang for his contribution to the document.
+
+# Contributors
+
+Shunwan Zhuang
+Huawei
+Email: zhuangshunwan@huawei.com
