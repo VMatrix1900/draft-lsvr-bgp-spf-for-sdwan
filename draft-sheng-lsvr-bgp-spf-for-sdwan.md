@@ -5,15 +5,15 @@ submissionType: IETF
 ipr: trust200902
 lang: en
 
-title: Advertising SaaS Path Performance Metrics using BGP
-abbrev: Saas Path Metric
-docname: draft-sheng-idr-advertising-saas-path-performance-latest
+title: Usage of BGP-LS-SPF in Multi-segment SD-WAN
+abbrev: BGP-LS-SPF for Multi-segment SD-WAN
+docname: draft-sheng-lsvr-bgp-spf-for-sdwan-01
 obsoletes:
 updates:
 # date: 2023-10-19 -- date is filled in automatically by xml2rfc if not given
 
 area: routing
-workgroup: IDR
+workgroup: LSVR
 
 kw:
   - SDWAN
@@ -25,7 +25,6 @@ author:
   organization: Huawei
   street: Beiqing Road
   city: Beijing
-  country: China
   email: shengcheng@huawei.com
  -
   ins: H. Shi
@@ -36,346 +35,98 @@ author:
   street: Beiqing Road
   city: Beijing
   country: China
- -
-  ins: L. Dunbar
-  name: Linda Dunbar
-  organization: Futurewei
-  email: linda.dunbar@futurewei.com
-  country: United States
 
 --- abstract
 
-This document extends BGP to advertise the SaaS path performance metrics from the gateway sites to branch sites. The user can access SaaS applications through the DIA (Direct Internet Access) link at the branch site or through the DIA link at the gateway site, or use the DIA link of a gateway site for redundancy. This approach will improve the SaaS access experience for end-users.
+This document introduces the usage of BGP-LS-SPF protocol in multi-segment SD-WAN scenarios. It allows SD-WAN tunnels to be published as logical links, which can cross the internet, MPLS networks, and various operator network. The BGP-LS-SPF protocol can construct an overlay network topology for logical links and physical links across these heterogeneous networks, and calculate the reachability routes of overlay network nodes based on this topology.
 
 --- middle
 
 # Introduction {#intro}
 
-With the continuous cloudification of enterprise IT architectures and widespread use of public clouds, more and more enterprises are turning their infrastructures (such as enterprise data centers) to cloudification, abandoning traditional closed IT architectures and using open network architectures.  To further achieve this goal, enterprises' mission-critical applications, such as office, production ERP systems, and sales systems, are migrated to the cloud. In this case, enterprises increasingly rely on software as a service (SaaS) provided by application service providers and prefer to access mission-critical applications from the cloud over the Internet.
+As pointed out in {{?I-D.draft-ietf-rtgwg-net2cloud-problem-statement}}, enterprises are migrating their workloads to cloud service. The enterprise branch interconnection and enterprise site to cloud DC connection may cross heterogeneous network such as operator networks, enterprise-owned backbone networks or direct connection lines.
 
-Accessing SaaS applications like SalesForce, SharePoint, Dropbox and Office 365 over congested public networks can be unreliable and slow, due to heavy traffic, packet loss, and fluctuating latencies. Application slowness results in poor end-user experience.
+For large enterprises to access the cloud service and interconnect their branches, a PoP GWs network can be built to provide multi-cloud, multi-tenant, and multi-branch interconnection. Depending on the geographical distribution of the enterprise branches, the PoP GWs network may be a cross-regional or even a global network. The PoP GW can be connected to the operator network or the enterprise-owned backbone network. The PoP GWs devices can also be directly connected through dedicated lines.
 
-This document provides a way to improve the SaaS access experience. As shown in the {{scenario}}, user can access SaaS applications through the DIA (Direct Internet Access) link at the branch site or through the DIA link at the gateway site. The GWs at the gateway site normally have stronger capabilities and will provide SaaS access services for branch sites. The CPE at the branch site need to choose the best path for each SaaS application. The performance of the path between gateway and SaaS application needs to be advertised to CPE. This document extends BGP to advertise the SaaS path performance metrics.
+According to {{!I-D.draft-ietf-bess-bgp-sdwan-usage}}, SD-WAN tunnels can be established between two GWs devices connected to the operator network, MPLS VPN network, or internet network through the WAN ports of the two PoP GWs devices. All GWs are under the control of one BGP instance. {{!I-D.draft-ietf-idr-sdwan-edge-discovery}} defines the mechanism for SD-WAN edges to discover each other's properties via BGP update through RR. This allows the interconnection between enterprise branches and multi-cloud to pass through multiple SD-WAN tunnels or direct connection lines, as shown in {{pop-gw}}.
 
-~~~
-                               (^^^^^^^^^^^^^^^^^^^^^^^)
-                              (       SaaS Apps         )
-                              (  +----+  +----+  +----+ )
-                              (  |App1|  |App2|  |App3| )
-                              (  +----+  +----+  +----+ )
-                               (^^^^^^^^^^^^^^^^^^^^^^^)
-                                     |   |    |
-                                     |   |    |
-                                     |  .|----|
-                                     | ( |    |)
-                                   .-|(  |    | )--.
-                            +-----(--+Internet/MPLS )
-                           /       '--(  |    | )--'
-                          /            ( |    \)
-                         /              '|----'\
-                        +                | +----|-----------+
-                    DIA | Link           \ | +--|--+        |
-                        |   +-------------\--| GW2 |        |
-                        |  / SD-WAN Tunnel \ +-----+        |
-                        | /                |\       Hub Site|
-              +----+  +-|/-+ SD-WAN Tunnel | \-----+        |
-              |User|--|CPE1|-----------------| GW1 |        |
-              +----+  +----+               | +-----+        |
-                      Branch Site          +----------------+
-~~~
-{: #scenario title="SaaS Application Path Performance Optimization Scenario"}
+This draft provides a way to use the BGP-LS-SPF protocol to collect the identification of PoP GW device node and the topology of SD-WAN tunnel and direct connection lines. In this way, each PoP GW device can learn the PoP GWs network topology, and calculate the route to any other PoP GW.
 
 # Terminology
 
-In addition to terms defined in [I-D.ietf-idr-sdwan-edge-discovery], this document uses following terms:
+This specification reuses terms defined in {{Section 5.2 of ?I-D.draft-ietf-lsvr-bgp-spf}} including BGP-LS-SPF Node NLRI, BGP-LS-SPF Link NLRI, Dijkstra Algorithm.
 
-- DIA: Direct Internet Access
-- FQDN: Fully Qualified Domain Name
-- QoS: Quality of Service
-- SaaS: Software-as-a-Service
+- PoP GW: Point of Presence Gateway
+- SD-WAN: Software Defined Wide Area Network. In this document, "SD-WAN" refers to policy-driven transporting IP packets over multiple different underlay networks to get better WAN bandwidth management, visibility and control.
+- RR: Route Reflector
+- Cloud DC: Off-Premise Data Centers that usually host applications and workload owned by different organizations or tenants.
 
 ## Requirements Language
 
 {::boilerplate bcp14-tagged}
 
-# Dynamically Select the Best Path
-
-This section uses the scenario shown in {{scenario}} as an example to describe how to implement the SaaS Path Optimization solution.
-
-Both the Branch and GW routers initiate periodic probes to target SaaS applications. The GW routers advertise the probe result to the Branch routers. The following figure shows the SaaS Path Performance Metrics table on the CPE1. Note that in this example, CPE1, GW1, and GW2 have multiple paths for accessing App1, 2 paths are listed for each device. The access to App2 and App3 is similar, only one entry is listed for the purpose of simplifying the description.
+# Usage of BGP-LS-SPF in Multi-segment SD-WAN
 
 ~~~
-   +----+--+-----+---------------+-----+------+---+---+---+---+-----+
-   |Name|ID|Path |Path Out Intf  |O_QoS|Status| L | D | J | B |F_QoS|
-   |    |  |Index|(# Remote)     |     |      |   |   |   |   |     |
-   +----+--+-----+---------------+-----+------+---+---+---+---+-----+
-   |App1|10| I11 |  GE 0/0/1.1   | 75  | Good |  1|150| 40|B01|  75 |
-   +----+--+-----+---------------+-----+------+---+---+---+---+-----+
-   |App1|10| I12 |  GE 0/0/1.1   | 80  | Good |  1|160| 40|B01|  80 |
-   +----+--+-----+---------------+-----+------+---+---+---+---+-----+
-   |App1|10| I13 |# GW1-System IP| 85  | Good |  0|100| 40|B11|  83 |
-   +----+--+-----+---------------+-----+------+---+---+---+---+-----+
-   |App1|10| I14 |# GW1-System IP| 85  | Good |  0|100| 40|B12|  81 |
-   +----+--+-----+---------------+-----+------+---+---+---+---+-----+
-   |App1|10| I15 |# GW2-System IP| 90  | Best |  0| 80| 20|B13|  82 |
-   +----+--+-----+---------------+-----+------+---+---+---+---+-----+
-   |App1|10| I16 |# GW2-System IP| 90  | Best |  0| 80| 20|B14|  88 |
-   +----+--+-----+---------------+-----+------+---+---+---+---+-----+
-   |App2|20| I02 |  GE 0/0/1.1   | 40  |Issue |  5|180|101|B02|  40 |
-   +----+--+-----+---------------+-----+------+---+---+---+---+-----+
-   |App2|20| I21 |# GW1-System IP| 80  | Good |  1|100| 70|B21|  75 |
-   +----+--+-----+---------------+-----+------+---+---+---+---+-----+
-   |App2|20| I22 |# GW2-System IP| 60  | Acct |  3|160| 80|B22|  55 |
-   +----+--+-----+---------------+-----+------+---+---+---+---+-----+
-   |App3|30| I03 |  GE 0/0/1.1   | 90  | Best |  0| 58| 20|B03|  90 |
-   +----+--+-----+---------------+-----+------+---+---+---+---+-----+
-   |App3|30| I31 |# GW1-System IP| 80  | Good |  0| 65| 30|B31|  78 |
-   +----+--+-----+---------------+-----+------+---+---+---+---+-----+
-   |App3|30| I32 |# GW2-System IP| 75  | Acct |  2|130| 90|B32|  72 |
-   +----+--+-----+---------------+-----+------+---+---+---+---+-----+
-   L: Loss          D: Delay
-   J: Jitter        B: Bandwidth
-   Acct: Acceptable O_QoS: Original QoS
-   F_QoS: Final QoS
+   + - - - +- - - - - - - - - - - -|RR| - - - - - - - - - -+ - - - - +
+   |       |                        |                      |         |
+   |    +--|--+                  +--|--+                +--|--+      |
+   |    | GW1 |------------------| GW2 | -Physical link-| GW3 |      |
+   |    +--|--+10.1.1.1  20.1.1.1+-----+                +--|--+      |
+   |       |     SD-WAN Tunnel  /                 Physical |30.1.1.1 |
+   |       |    ----------------                      Link |         |
+   |       |   / over Internet                             |40.1.1.1 |
+   |    +--|--+                                         +--|--+      |
+   |+--+| GW5 |---------SD-WAN Tunnel over MPLS---------| GW4 |+-----+
+        +--|--+                                         +--|--+
+           |                                               |
++ - -+   + - -+                                         + - -+   + - -+
+|User|---|CPE1|                                         |CPE2|---|APPs|
++ - -+   + - -+                                         + - -+   + - -+
 ~~~
-{: #Metric-table title="CPE1's SaaS Path Perfermance Metrics Table"}
+{: #pop-gw  title="PoP GWs network"}
 
-Upon receiving the QoS score from the GW router, CPE1 will calculates the Final QoS score based on the SD-WAN tunnel status and and the received QoS score. When a user of CPE1 accesses a SaaS applications, CPE1 determines the best performing path toward the SaaS application based on the Final QoS score (F_QoS).
+As shown in {{pop-gw}}, GW1, GW2, GW5 are connected to the same internet/ISP network. The GW2 and GW3 are connected through direct dedicated links. GW5 and GW4 are connected by MPLS VPN. BGP-SD-WAN neighbors are established between GWs through RR. BGP-LS-SPF neighbors are established between each GW and RR. SD-WAN tunnel links are established between GWs through BGP-SD-WAN neighbors reflecting SD-WAN routes(see {{!I-D.draft-ietf-idr-sdwan-edge-discovery}}), as shown in the SD-WAN Tunnel between GW1 and GW2 with WAN port IP addresses of 10.1.1.1 and 20.1.1.1, respectively. GW nodes reflect the SD-WAN tunnel topology information to all GWs, including dedicated line-connected GWs, through BGP-LS-SPF neighbors with RR.
 
-For example If App1 is the target SaaS Application, select the SaaS path that passes through GW2 with the Path Index I16 because it has the highest score: 88. If App2 is the target SaaS Application, select the SaaS path that passes through GW1 with the Path Index I21 because it has the highest score: 75. If App3 is the target SaaS application, select the local SaaS path with the Path Index I03 because it has the highest score: 90.
+GW2-GW3-GW4 are connected through dedicated lines. BGP-LS-SPF neighbors are established between GWs through dedicated lines, and also between GWs and RR. The BGP-LS-SPF neighbors between dedicated lines are used to discover the topology information of the dedicated lines, such as the direct link with port IP addresses of 30.1.1.1 and 40.1.1.1 between GW3 and GW4 shown in the figure. The dedicated line topology information is reflected to all GWs, including SD-WAN tunnel-connected GWs, through BGP-LS-SPF neighbors with RR.
 
-# The SaaS Path Performance Route
+The BGP-LS-SPF LINK NLRI is used to carry the two endpoint IP address of the SD-WAN tunnel or dedicated lines. The BGP-LS-SPF NODE NLRI is used to carry PoP GW device node identification. They are advertised to other GWs through the RR. In this way, all GW learns the topology of whole PoP GWs network and can calculate the next hop to any other GW using Dijkstra Algorithm.
 
-The BGP SD-WAN NLRI as defined in [I-D.ietf-idr-sdwan-edge-discovery] is shown below:
+# Extensions to BGP-LS
+
+The link could be Overlay link (Such as Internet, MPLS, LTE etc.,) and Underlay/Physical link (Such as Dedicated line, Direct link etc.,). Different customer may require different types of link. For example, FinTech customer has very high security requirement and would like to exclude Internet and LTE, only use MPLS or Dedicated line; some customer only wants to use the Dedicated line/Direct link to get the highest quality path; some customer prefers to use LTE only as backup link to save the cost. The calculation of these customized SD-WAN path needs to include or exclude one or more specific link types, therefore, when SD-WAN link information is advertised through BGP-LS-SPF Link NLRI, the SD-WAN link type needs to be explicitly indicated.
+
+In this document, a new BGP-LS-SPF Attribute TLV of the BGP-LS-SPF Link NLRI is added to identify a SD-WAN link type, called Link-Type TLV. The format of the Link-Type TLV is defined as follows:
 
 ~~~
- +-----------------------------------+
- | Route Type (2 octets)             |
- +-----------------------------------+
- | Length (2 octets)                 |
- +-----------------------------------+
- ~                                   ~
- | Type Specific Value (variable)    |
- ~                                   ~
- +-----------------------------------+
+        0                   1                   2                   3
+        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |              Type             |             Length            |
+       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+       |   Link-Type   |
+       +-+-+-+-+-+-+-+-+
 ~~~
-{: #NLRI  title="BGP SD-WAN NLRI"}
+{: #link-type-tlv  title="Link-Type TLV Format"}
 
-Where:
+where:
+Type: TBA
 
--  Route (NLRI) Type: 2 octet value to define the encoding of the rest of the SD-WAN NLRI.
--  Length: 2 octets of length expressed in bits as defined in [RFC4760].
+Length: Specifies the length of the value field (i.e., not including Type and Length fields) in terms of octets. The value MUST be 1.
 
-This document defines an additional route type to be used for the advertisement of the SaaS Path Performance Metrics between different enterprise sites:
+Link-Type:
 
-- NLRI Route Type: 2
+- 0: Reserved
+- 1: Physical/Dedicated Line/Direct link
+- 2: Internet
+- 3: MPLS
+- 4: LTE
 
-- Name: SaaS Path Performance Route
-
-## The SaaS Path Performance Route Encoding
-
-~~~
- +--------------------+
- |  Route Type = 2    | 2 octets
- +--------------------+
- |  Length            | 2 octets
- +--------------------+
- |  Site ID           | 4 octets
- +--------------------+
- |  APP ID            | 4 octets
- +--------------------+
- |  APP Req           | 1 octet
- +--------------------+
- |  Path Index Type   | 1 octet
- +--------------------+
- |  Path Index Value  | 3 or 4 or 16 octets
- +--------------------+
- |  SD-WAN-Node-ID    | 4 or 16 octets
- +--------------------+
-~~~
-{: #Encoding  title="SaaS Path Performance Route"}
-
-Where:
-
-- Route Type: 2, SaaS Path Performance Route
-- Length: 2 octets of length expressed in bits as defined in [RFC4760].
-- Site ID: 4 octets, A site ID is a unique identifier of an enterprise site in the SD-WAN network.
-- APP ID: 4 octets, SaaS Application ID, a unique Application ID to identify different applications. Application may be deployed using different IP address in different area. Thus an ID is needed to identify the application.
-- APP Req: 1 octet, Application requirement to indicate the application requirement of the path quality. For example, an real time video conferencing application requires higher quality than a background file backup application. The value includes:
-  - Type = 1: default;
-  - Type = 2: Medium;
-  - Type = 3: High;
-- Path Index Type: Indicates the type of the path index.
-- Path Index Value: a Path Index Type specific Value:
-  - Type 1, the Path Index Value is a 4-byte local index value, which is used to identify an outbound interface for accessing SaaS applications.
-  - Type 2, the Path Index Value is a 3-byte MPLS label, which is used to identify an outbound interface for accessing the SaaS application.
-  - Type 3, The Path Index Value is a 16-byte SRv6 SID, which is used to identify an outbound interface for accessing a SaaS application, and its Endpoint Behavior is End.DT2SaaSPath: Decapsulate SRv6 packet, then send the packet to the target SaaS application from the outbound interface indicated by the SRv6 SID.
-- SD-WAN Node ID: The node's IPv4 or IPv6 address.
-
-## The SaaS Path Performance Metrics Encoding
-
-The Metadata Path Attribute has been as defined in [I-D.ietf-idr-5g-edge-service-metadata]. This document introduces some additional Sub-TLVs to encode the SaaS Path Performance Metrics and SaaS Application Information.
-
-Another option is to use the above Sub-TLVs in the Tunnel Encapsulation Attribute [RFC9012].  In this option, the tunnel type "SaaS Application Path Performance" is added.
-
-### The SaaS Path Delay Sub-TLV format
-
-~~~
-      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     |    Delay Sub-Type = TBD1      |               Length          |
-     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     |         Delay                 |
-     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-~~~
-{: #Path-Delay  title="SaaS Path Delay Sub-TLV"}
-
-Where:
-
-* Delay Sub-Type: TBD by IANA.
-* Length: 2 octets, the total number of octets of the value field.
-* Delay: 2 octets, this field indicates the packet transmission delay, in milliseconds.
-
-### The SaaS Path Loss Sub-TLV format
-
-~~~
-      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     |    Loss  Sub-Type = TBD2      |               Length          |
-     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     |     Loss      |
-     +-+-+-+-+-+-+-+-+
-~~~
-{: #Path-Loss  title="SaaS Path Loss Sub-TLV"}
-
-Where:
-
-*  Loss Sub-Type: TBD by IANA
-*  Length: 2 octets, the total number of octets of the value field.
-*  Loss: 1 octet, this field indicates the packet loss rate (%).
-
-### The SaaS Path Jitter Sub-TLV format
-
-~~~
-     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |    Jitter Sub-Type = TBD3     |               Length          |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |         Jitter                |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-~~~
-{: #Path-Jitter  title="SaaS Path Jitter Sub-TLV"}
-
-Where:
-
-*  Jitter Sub-Type: TBD by IANA
-*  Length: 2 octets, the total number of octets of the value field.
-*  Jitter: 2 octets, this field indicates the jitter on the SaaS Path. Range: 1 through 1000 milliseconds
-
-###  The SaaS Path Bandwidth Sub-TLV format
-
-~~~
-     0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |  Bandwidth Sub-Type = TBD4    |               Length          |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-    |                           Bandwidth                           |
-    +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-~~~
-{: #Path-Bandwidth  title="SaaS Path Bandwidth Sub-TLV"}
-
-Where:
-
-*  Bandwidth Sub-Type: TBD by IANA
-*  Length: 2 octets, the total number of octets of the value field.
-*  Bandwidth: 4 octets, this field indicates the bandwidth of the SaaS Path.
-
-### The SaaS Path Status Sub-TLV format
-
-~~~
-      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     |    Status Sub-Type = TBD5     |               Length          |
-     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     |    Status     |
-     +-+-+-+-+-+-+-+-+
-~~~
-{: #Path-Status title="SaaS Path Status Sub-TLV"}
-
-Where:
-
-*  Status Sub-Type: TBD by IANA
-*  Length: 2 octets, the total number of octets of the value field.
-*  Status: 1 octet, Network assessment, there are 6 levels as
-   follows:
-   -  100: Best
-   -  80: Good, Meets recommendations
-   -  60: Acceptable
-   -  40: Users may experience issues
-   -  20: Users may complain
-   -  0: Network problems
-
-### The SaaS Path QoS Sub-TLV format
-
-~~~
-      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     |    QoS Sub-Type = TBD6        |               Length          |
-     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     |      QoS      |
-     +-+-+-+-+-+-+-+-+
-~~~
-{: #Path-QoS title="SaaS Path QoS Sub-TLV"}
-
-Where:
-
-*  QoS Sub-Type: TBD by IANA
-*  Length: 2 octets, the total number of octets of the value field.
-*  QoS: 1 octet, Quality of Service, 1-100, with 1 being the worst, and 100 being the best. The QoS value is calculated based on the values of Loss, Jitter, Delay, and Status.
-
-### The SaaS Application Name Sub-TLV format
-
-~~~
-      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     | SaaS AppName Sub-Type = TBD7  |               Length          |
-     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     ~                                                               ~
-     |             Application Name (1-n Octets)                     |
-     ~                                                               ~
-     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-~~~
-{: #App-Name title="Saas Application Name Sub-TLV"}
-
-Where:
-
-*  SaaS AppName Sub-Type: TBD by IANA
-*  Length: 2 octets, the total number of octets of the value field.
-*  Application Name: The name of the application represented as a string, such as Salesforce, Dropbox, Office 365, and so on.
-
-### The SaaS Application Domain Name Sub-TLV format
-
-~~~
-      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     | AppDomainName Sub-Type = TBD8 |               Length          |
-     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-     ~                                                               ~
-     |         Application Domain Name (Variable)                    |
-     ~                                                               ~
-     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-~~~
-{: #App-Domain-Name title="SaaS Application Domain Name Sub-TLV"}
-
-Where:
-
-*  AppDomainName Sub-Type: TBD by IANA
-*  Length: 2 octets, the total number of octets of the value field.
-*  Application Domain Name: The domain name of the application represented as a string, such as www.salesforce.com, www.baidu.com, www.iana.org, www.dropbox.com, www.microsoft.com, and so on.
+This BGP-LS-SPF Attribute TLV of the BGP-LS-SPF Link NLRI is defined to indicate the Link-Type of the SD-WAN link.
 
 # Security Considerations
 
-TBD.
+This document does not introduce any new security considerations.
 
 # IANA Considerations
 
@@ -383,12 +134,12 @@ TBD.
 
 --- back
 
+# Acknowledgements
+
+The authors would like to thank Donglei Pang for his contribution to the document.
+
 # Contributors
 
 Shunwan Zhuang
 Huawei
 Email: zhuangshunwan@huawei.com
-
-Penghe Tang
-Huawei Technologies
-Email: tangpenghe@huawei.com@huawei.com
