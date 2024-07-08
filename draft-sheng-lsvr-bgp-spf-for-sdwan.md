@@ -90,9 +90,32 @@ As shown in {{pop-gw}}, GW1, GW2, GW5 are connected to the same internet/ISP net
 
 GW2-GW3-GW4 are connected through dedicated lines. BGP-LS-SPF neighbors are established between GWs through dedicated lines, and also between GWs and RR. The BGP-LS-SPF neighbors between dedicated lines are used to discover the topology information of the dedicated lines, such as the direct link with port IP addresses of 30.1.1.1 and 40.1.1.1 between GW3 and GW4 shown in the figure. The dedicated line topology information is reflected to all GWs, including SD-WAN tunnel-connected GWs, through BGP-LS-SPF neighbors with RR.
 
-The BGP-LS-SPF LINK NLRI is used to carry the two endpoint IP address of the SD-WAN tunnel or dedicated lines. The BGP-LS-SPF NODE NLRI is used to carry PoP GW device node identification. They are advertised to other GWs through the RR. In this way, all GW learns the topology of whole PoP GWs network and can calculate the next hop to any other GW using Dijkstra Algorithm.
+BGP-LS-SPF can be used in two scenarios in Multi-segment SD-WAN:
+1. TE. When TE is used, SLA of all SD-WAN tunnels will be collected to calculate shortest path. The protocol ID of BGP-LS is BGP. The BGP-LS-SPF LINK NLRI is used to carry the two endpoint IP address of the SD-WAN tunnel or dedicated lines. The BGP-LS-SPF NODE NLRI is used to carry PoP GW device node identification.
+2. BE. When BE is used, only reachability of a SD-WAN site is collected. An SD-WAN site may contains multiple GWs. There is no need to collect the SLA of every SD-WAN tunnels between two sites. In this case, a new BGP-LS Protocol-ID is used and new Node Descriptor sub-tlv is defined to carry the site ID.
+
+In both scenarios, BGP-LS-SPF LINK NLRI and NODE NLRI are advertised to other GWs through the RR. In this way, all GW learns the topology of whole PoP GWs network and can calculate the next hop to any other GW using Dijkstra Algorithm.
 
 # Extensions to BGP-LS
+
+## SDWAN Protocol ID
+
+This document specifies the advertisement of SDWAN topology information via BGP-LS-SPF Link NLRI type and Node NLRI type, which requires use of a new BGP-LS Protocol-ID (value 10). The use of a new Protocol-ID allows separation and differentiation between the BGP-LS NLRIs carrying SDWAN topology information from the BGP-LS NLRIs carrying other link-state information defined in {{!RFC9552}}.
+
+## Node Descriptor Sub-tlv
+
+This document introduces a new Node Descriptor Sub-TLV to carry the SDWAN Site ID to identify an SDWAN site. A site may contains multiple GWs. This field has the same meaning of SD-WAN-Color in {{Section 6.1 of !I-D.draft-ietf-idr-sdwan-edge-discovery}}, representing a group of tunnels terminated at SD-WAN GWs co-located at the site.
+
+~~~
+   0                   1                   2                   3
+   0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |              Type             |             Length            |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+  |                          Site-id                              |
+  +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+~~~
+{: #node-descriptor  title="Node Descriptor Sub-TLV Format"}
 
 ## Link-Type TLV
 The link could be Overlay link (Such as Internet, MPLS, LTE etc.,) and Underlay/Physical link (Such as Dedicated line, Direct link etc.,). Different customer may require different types of link. For example, FinTech customer has very high security requirement and would like to exclude Internet and LTE, only use MPLS or Dedicated line; some customer only wants to use the Dedicated line/Direct link to get the highest quality path; some customer prefers to use LTE only as backup link to save the cost. The calculation of these customized SD-WAN path needs to include or exclude one or more specific link types, therefore, when SD-WAN link information is advertised through BGP-LS-SPF Link NLRI, the SD-WAN link type needs to be explicitly indicated.
@@ -100,15 +123,15 @@ The link could be Overlay link (Such as Internet, MPLS, LTE etc.,) and Underlay/
 In this document, a new BGP-LS-SPF Attribute TLV of the BGP-LS-SPF Link NLRI is added to identify a SD-WAN link type, called Link-Type TLV. The format of the Link-Type TLV is defined as follows:
 
 ~~~
-        0                   1                   2                   3
-        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |              Type             |             Length            |
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |   Link-Type   |
-       +-+-+-+-+-+-+-+-+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |              Type             |             Length            |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |   Link-Type   |
+   +-+-+-+-+-+-+-+-+
 ~~~
-{: #link-type-tlv  title="Link-Type TLV Format"}
+{: #link-type  title="Link-Type TLV Format"}
 
 where:
 Type: TBA
@@ -125,15 +148,30 @@ Link-Type:
 
 This BGP-LS-SPF Attribute TLV of the BGP-LS-SPF Link NLRI is defined to indicate the Link-Type of the SD-WAN link.
 
-## New Node NLRI
-
 # Security Considerations
 
 This document does not introduce any new security considerations.
 
 # IANA Considerations
 
-TBD.
+## BGP-LS Protocol-IDs
+IANA maintains a registry called "BGP-LS Protocol-IDs" in the "Border Gateway Protocol - Link State (BGP-LS) Parameters" registry group.
+
+This document requests IANA to allocate the following Protocol-ID codepoint:
+
+| Protocol ID | NLRI information source protocol | Reference     |
+|-------------|----------------------------------|---------------|
+| 10          | SDWAN                            | this document |
+
+## BGP-LS TLVs
+IANA maintains a registry called "BGP-LS NLRI and Attribute TLVs" in the "Border Gateway Protocol - Link State (BGP-LS) Parameters" registry group.
+
+This document requests IANA to allocate the following TLV codepoint:
+
+| TLV Code Point |       Description         | Reference     |
+|-------------|------------------------------|---------------|
+| TBD         | SDWAN Node Descriptors       | this document |
+| TBD         | Link-Type                    | this document |
 
 --- back
 
