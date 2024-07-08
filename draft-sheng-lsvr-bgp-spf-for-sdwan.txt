@@ -5,7 +5,7 @@
 LSVR                                                            C. Sheng
 Internet-Draft                                               H. Shi, Ed.
 Intended status: Standards Track                                  Huawei
-Expires: 25 April 2024                                   23 October 2023
+Expires: 9 January 2025                                      8 July 2024
 
 
               Usage of BGP-LS-SPF in Multi-segment SD-WAN
@@ -47,11 +47,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 25 April 2024.
+   This Internet-Draft will expire on 9 January 2025.
 
 Copyright Notice
 
-   Copyright (c) 2023 IETF Trust and the persons identified as the
+   Copyright (c) 2024 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -70,8 +70,13 @@ Table of Contents
      2.1.  Requirements Language
    3.  Usage of BGP-LS-SPF in Multi-segment SD-WAN
    4.  Extensions to BGP-LS
+     4.1.  SDWAN Protocol ID
+     4.2.  Node Descriptor Sub-tlv
+     4.3.  Link-Type TLV
    5.  Security Considerations
    6.  IANA Considerations
+     6.1.  BGP-LS Protocol-IDs
+     6.2.  BGP-LS TLVs
    7.  References
      7.1.  Normative References
      7.2.  Informative References
@@ -180,14 +185,54 @@ Table of Contents
    topology information is reflected to all GWs, including SD-WAN
    tunnel-connected GWs, through BGP-LS-SPF neighbors with RR.
 
-   The BGP-LS-SPF LINK NLRI is used to carry the two endpoint IP address
-   of the SD-WAN tunnel or dedicated lines.  The BGP-LS-SPF NODE NLRI is
-   used to carry PoP GW device node identification.  They are advertised
+   BGP-LS-SPF can be used in two scenarios in Multi-segment SD-WAN: 1.
+   TE.  When TE is used, SLA of all SD-WAN tunnels will be collected to
+   calculate shortest path.  The protocol ID of BGP-LS is BGP.  The BGP-
+   LS-SPF LINK NLRI is used to carry the two endpoint IP address of the
+   SD-WAN tunnel or dedicated lines.  The BGP-LS-SPF NODE NLRI is used
+   to carry PoP GW device node identification. 2.  BE.  When BE is used,
+   only reachability of a SD-WAN site is collected.  An SD-WAN site may
+   contains multiple GWs.  There is no need to collect the SLA of every
+   SD-WAN tunnels between two sites.  In this case, a new BGP-LS
+   Protocol-ID is used and new Node Descriptor sub-tlv is defined to
+   carry the site ID.
+
+   In both scenarios, BGP-LS-SPF LINK NLRI and NODE NLRI are advertised
    to other GWs through the RR.  In this way, all GW learns the topology
    of whole PoP GWs network and can calculate the next hop to any other
    GW using Dijkstra Algorithm.
 
 4.  Extensions to BGP-LS
+
+4.1.  SDWAN Protocol ID
+
+   This document specifies the advertisement of SDWAN topology
+   information via BGP-LS-SPF Link NLRI type and Node NLRI type, which
+   requires use of a new BGP-LS Protocol-ID (value 10).  The use of a
+   new Protocol-ID allows separation and differentiation between the
+   BGP-LS NLRIs carrying SDWAN topology information from the BGP-LS
+   NLRIs carrying other link-state information defined in [RFC9552].
+
+4.2.  Node Descriptor Sub-tlv
+
+   This document introduces a new Node Descriptor Sub-TLV to carry the
+   SDWAN Site ID to identify an SDWAN site.  A site may contains
+   multiple GWs.  This field has the same meaning of SD-WAN-Color in
+   Section 6.1 of [I-D.draft-ietf-idr-sdwan-edge-discovery],
+   representing a group of tunnels terminated at SD-WAN GWs co-located
+   at the site.
+
+      0                   1                   2                   3
+      0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |              Type             |             Length            |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+     |                          Site-id                              |
+     +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+                  Figure 2: Node Descriptor Sub-TLV Format
+
+4.3.  Link-Type TLV
 
    The link could be Overlay link (Such as Internet, MPLS, LTE etc.,)
    and Underlay/Physical link (Such as Dedicated line, Direct link
@@ -206,15 +251,15 @@ Table of Contents
    Link NLRI is added to identify a SD-WAN link type, called Link-Type
    TLV.  The format of the Link-Type TLV is defined as follows:
 
-        0                   1                   2                   3
-        0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |              Type             |             Length            |
-       +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-       |   Link-Type   |
-       +-+-+-+-+-+-+-+-+
+       0                   1                   2                   3
+       0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |              Type             |             Length            |
+      +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+      |   Link-Type   |
+      +-+-+-+-+-+-+-+-+
 
-                    Figure 2: Link-Type TLV Format
+                       Figure 3: Link-Type TLV Format
 
    where: Type: TBA
 
@@ -242,26 +287,58 @@ Table of Contents
 
 6.  IANA Considerations
 
-   TBD.
+6.1.  BGP-LS Protocol-IDs
+
+   IANA maintains a registry called "BGP-LS Protocol-IDs" in the "Border
+   Gateway Protocol - Link State (BGP-LS) Parameters" registry group.
+
+   This document requests IANA to allocate the following Protocol-ID
+   codepoint:
+
+    +=============+==================================+===============+
+    | Protocol ID | NLRI information source protocol | Reference     |
+    +=============+==================================+===============+
+    | 10          | SDWAN                            | this document |
+    +-------------+----------------------------------+---------------+
+
+                                 Table 1
+
+6.2.  BGP-LS TLVs
+
+   IANA maintains a registry called "BGP-LS NLRI and Attribute TLVs" in
+   the "Border Gateway Protocol - Link State (BGP-LS) Parameters"
+   registry group.
+
+   This document requests IANA to allocate the following TLV codepoint:
+
+        +================+========================+===============+
+        | TLV Code Point | Description            | Reference     |
+        +================+========================+===============+
+        | TBD            | SDWAN Node Descriptors | this document |
+        +----------------+------------------------+---------------+
+        | TBD            | Link-Type              | this document |
+        +----------------+------------------------+---------------+
+
+                                  Table 2
 
 7.  References
 
 7.1.  Normative References
 
    [I-D.draft-ietf-bess-bgp-sdwan-usage]
-              Dunbar, L., Sajassi, A., Drake, J., and B. Najem, "BGP
-              Usage for SD-WAN Overlay Networks", Work in Progress,
-              Internet-Draft, draft-ietf-bess-bgp-sdwan-usage-17, 5
-              October 2023, <https://datatracker.ietf.org/doc/html/
-              draft-ietf-bess-bgp-sdwan-usage-17>.
+              Dunbar, L., Sajassi, A., Drake, J., Najem, B., and S.
+              Hares, "BGP Usage for SD-WAN Overlay Networks", Work in
+              Progress, Internet-Draft, draft-ietf-bess-bgp-sdwan-usage-
+              23, 29 April 2024, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-bess-bgp-sdwan-usage-23>.
 
    [I-D.draft-ietf-idr-sdwan-edge-discovery]
               Dunbar, L., Majumdar, K., Hares, S., Raszuk, R., and V.
               Kasiviswanathan, "BGP UPDATE for SD-WAN Edge Discovery",
               Work in Progress, Internet-Draft, draft-ietf-idr-sdwan-
-              edge-discovery-12, 14 October 2023,
+              edge-discovery-13, 4 June 2024,
               <https://datatracker.ietf.org/doc/html/draft-ietf-idr-
-              sdwan-edge-discovery-12>.
+              sdwan-edge-discovery-13>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -272,23 +349,27 @@ Table of Contents
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
 
+   [RFC9552]  Talaulikar, K., Ed., "Distribution of Link-State and
+              Traffic Engineering Information Using BGP", RFC 9552,
+              DOI 10.17487/RFC9552, December 2023,
+              <https://www.rfc-editor.org/rfc/rfc9552>.
+
 7.2.  Informative References
 
    [I-D.draft-ietf-rtgwg-net2cloud-problem-statement]
               Dunbar, L., Malis, A. G., Jacquenet, C., Toy, M., and K.
-              Majumdar, "Dynamic Networks to Hybrid Cloud DCs: Problem
-              Statement and Mitigation Practices", Work in Progress,
-              Internet-Draft, draft-ietf-rtgwg-net2cloud-problem-
-              statement-30, 22 September 2023,
-              <https://datatracker.ietf.org/doc/html/draft-ietf-rtgwg-
-              net2cloud-problem-statement-30>.
+              Majumdar, "Dynamic Networks to Hybrid Cloud DCs: Problems
+              and Mitigation Practices", Work in Progress, Internet-
+              Draft, draft-ietf-rtgwg-net2cloud-problem-statement-39, 15
+              April 2024, <https://datatracker.ietf.org/doc/html/draft-
+              ietf-rtgwg-net2cloud-problem-statement-39>.
 
    [I-D.draft-ietf-lsvr-bgp-spf]
               Patel, K., Lindem, A., Zandi, S., and W. Henderickx, "BGP
               Link-State Shortest Path First (SPF) Routing", Work in
-              Progress, Internet-Draft, draft-ietf-lsvr-bgp-spf-28, 29
-              August 2023, <https://datatracker.ietf.org/doc/html/draft-
-              ietf-lsvr-bgp-spf-28>.
+              Progress, Internet-Draft, draft-ietf-lsvr-bgp-spf-31, 17
+              June 2024, <https://datatracker.ietf.org/doc/html/draft-
+              ietf-lsvr-bgp-spf-31>.
 
 Appendix A.  Acknowledgements
 
