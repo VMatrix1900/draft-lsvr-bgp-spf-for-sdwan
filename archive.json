@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2025-01-30T00:40:18.452854+00:00",
+  "timestamp": "2025-02-13T00:42:02.656864+00:00",
   "repo": "VMatrix1900/draft-lsvr-bgp-spf-for-sdwan",
   "labels": [
     {
@@ -47,8 +47,44 @@
       "name": "wontfix",
       "description": "This will not be worked on",
       "color": "ffffff"
+    },
+    {
+      "name": "template_sync",
+      "description": "",
+      "color": "E99695"
     }
   ],
   "issues": [],
-  "pulls": []
+  "pulls": [
+    {
+      "number": 1,
+      "id": "PR_kwDOJ51wfs6K5OO4",
+      "title": "upstream merge template repository",
+      "url": "https://github.com/VMatrix1900/draft-lsvr-bgp-spf-for-sdwan/pull/1",
+      "state": "MERGED",
+      "author": "VMatrix1900",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [
+        "template_sync"
+      ],
+      "body": "Merge https://github.com/martinthomson/internet-draft-template ea87c4f",
+      "createdAt": "2025-02-12T03:21:29Z",
+      "updatedAt": "2025-02-12T03:22:21Z",
+      "baseRepository": "VMatrix1900/draft-lsvr-bgp-spf-for-sdwan",
+      "baseRefName": "main",
+      "baseRefOid": "79a662a47aff71b5b686cee33c9ea344701dd9b6",
+      "headRepository": "VMatrix1900/draft-lsvr-bgp-spf-for-sdwan",
+      "headRefName": "chore/template_sync_ea87c4f",
+      "headRefOid": "45385682a0a98317472bf4e9d212df50ada6cc33",
+      "closedAt": "2025-02-12T03:22:21Z",
+      "mergedAt": "2025-02-12T03:22:21Z",
+      "mergedBy": "VMatrix1900",
+      "mergeCommit": {
+        "oid": "9258a58e27fa1e3fd95d5bb9f068e4db72a622ae"
+      },
+      "comments": [],
+      "reviews": []
+    }
+  ]
 }
