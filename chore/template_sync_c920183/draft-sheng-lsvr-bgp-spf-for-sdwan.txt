@@ -5,8 +5,8 @@
 LSVR                                                            C. Sheng
 Internet-Draft                                                    H. Shi
 Intended status: Standards Track                            J. Dong, Ed.
-Expires: 29 January 2026                                          Huawei
-                                                            28 July 2025
+Expires: 19 March 2026                                            Huawei
+                                                       15 September 2025
 
 
               Usage of BGP-LS-SPF in Multi-segment SD-WAN
@@ -48,7 +48,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 29 January 2026.
+   This Internet-Draft will expire on 19 March 2026.
 
 Copyright Notice
 
@@ -330,9 +330,8 @@ Table of Contents
               Dunbar, L., Sajassi, A., Drake, J., Najem, B., and S.
               Hares, "BGP Usage for SD-WAN Overlay Networks", Work in
               Progress, Internet-Draft, draft-ietf-bess-bgp-sdwan-usage-
-              25, 20 December 2024,
-              <https://datatracker.ietf.org/doc/html/draft-ietf-bess-
-              bgp-sdwan-usage-25>.
+              26, 28 July 2025, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-bess-bgp-sdwan-usage-26>.
 
    [I-D.draft-ietf-idr-sdwan-edge-discovery]
               Dunbar, L., Hares, S., Majumdar, K., Raszuk, R., and V.
