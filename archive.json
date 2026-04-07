@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2026-04-05T01:18:42.874973+00:00",
+  "timestamp": "2026-04-07T01:16:55.488817+00:00",
   "repo": "VMatrix1900/draft-lsvr-bgp-spf-for-sdwan",
   "labels": [
     {
@@ -307,7 +307,7 @@
       "id": "PR_kwDOJ51wfs7D-ktG",
       "title": "upstream merge template repository",
       "url": "https://github.com/VMatrix1900/draft-lsvr-bgp-spf-for-sdwan/pull/8",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "VMatrix1900",
       "authorAssociation": "OWNER",
       "assignees": [],
@@ -316,13 +316,49 @@
       ],
       "body": "Merge https://github.com/martinthomson/internet-draft-template 96c2a52",
       "createdAt": "2026-02-16T01:19:42Z",
-      "updatedAt": "2026-02-16T01:19:43Z",
+      "updatedAt": "2026-04-06T01:45:22Z",
       "baseRepository": "VMatrix1900/draft-lsvr-bgp-spf-for-sdwan",
       "baseRefName": "main",
       "baseRefOid": "f2b13d510bc1bf7d9ee91b31346e1ece53c0c2de",
       "headRepository": "VMatrix1900/draft-lsvr-bgp-spf-for-sdwan",
       "headRefName": "chore/template_sync_96c2a52",
       "headRefOid": "93ac7a1fbc577ddde29cd87fcbf403106dcdadfa",
+      "closedAt": "2026-04-06T01:45:22Z",
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [
+        {
+          "author": "VMatrix1900",
+          "authorAssociation": "OWNER",
+          "body": "[actions-template-sync] :construction_worker: automatically closed because there is a new open PR",
+          "createdAt": "2026-04-06T01:45:21Z",
+          "updatedAt": "2026-04-06T01:45:21Z"
+        }
+      ],
+      "reviews": []
+    },
+    {
+      "number": 9,
+      "id": "PR_kwDOJ51wfs7QGSPO",
+      "title": "upstream merge template repository",
+      "url": "https://github.com/VMatrix1900/draft-lsvr-bgp-spf-for-sdwan/pull/9",
+      "state": "OPEN",
+      "author": "VMatrix1900",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [
+        "template_sync"
+      ],
+      "body": "Merge https://github.com/martinthomson/internet-draft-template c544c79",
+      "createdAt": "2026-04-06T01:45:23Z",
+      "updatedAt": "2026-04-06T01:45:24Z",
+      "baseRepository": "VMatrix1900/draft-lsvr-bgp-spf-for-sdwan",
+      "baseRefName": "main",
+      "baseRefOid": "f2b13d510bc1bf7d9ee91b31346e1ece53c0c2de",
+      "headRepository": "VMatrix1900/draft-lsvr-bgp-spf-for-sdwan",
+      "headRefName": "chore/template_sync_c544c79",
+      "headRefOid": "5529333b653f445ab18fe21668b657070d8dd353",
       "closedAt": null,
       "mergedAt": null,
       "mergedBy": null,
