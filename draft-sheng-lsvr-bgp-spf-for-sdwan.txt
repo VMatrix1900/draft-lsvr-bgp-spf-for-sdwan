@@ -5,8 +5,8 @@
 LSVR                                                            C. Sheng
 Internet-Draft                                                    H. Shi
 Intended status: Standards Track                            J. Dong, Ed.
-Expires: 18 November 2025                                         Huawei
-                                                             17 May 2025
+Expires: 4 February 2027                                          Huawei
+                                                           3 August 2026
 
 
               Usage of BGP-LS-SPF in Multi-segment SD-WAN
@@ -48,11 +48,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 18 November 2025.
+   This Internet-Draft will expire on 4 February 2027.
 
 Copyright Notice
 
-   Copyright (c) 2025 IETF Trust and the persons identified as the
+   Copyright (c) 2026 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -330,17 +330,16 @@ Table of Contents
               Dunbar, L., Sajassi, A., Drake, J., Najem, B., and S.
               Hares, "BGP Usage for SD-WAN Overlay Networks", Work in
               Progress, Internet-Draft, draft-ietf-bess-bgp-sdwan-usage-
-              25, 20 December 2024,
-              <https://datatracker.ietf.org/doc/html/draft-ietf-bess-
-              bgp-sdwan-usage-25>.
+              37, 1 June 2026, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-bess-bgp-sdwan-usage-37>.
 
    [I-D.draft-ietf-idr-sdwan-edge-discovery]
               Dunbar, L., Hares, S., Majumdar, K., Raszuk, R., and V.
               Kasiviswanathan, "BGP UPDATE for SD-WAN Edge Discovery",
               Work in Progress, Internet-Draft, draft-ietf-idr-sdwan-
-              edge-discovery-22, 17 February 2025,
+              edge-discovery-29, 24 July 2026,
               <https://datatracker.ietf.org/doc/html/draft-ietf-idr-
-              sdwan-edge-discovery-22>.
+              sdwan-edge-discovery-29>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -360,11 +359,11 @@ Table of Contents
 
    [I-D.draft-ietf-rtgwg-net2cloud-problem-statement]
               Dunbar, L., Malis, A. G., Jacquenet, C., Toy, M., and K.
-              Majumdar, "Dynamic Networks to Hybrid Cloud DCs: Problems
-              and Mitigation Practices", Work in Progress, Internet-
-              Draft, draft-ietf-rtgwg-net2cloud-problem-statement-42, 17
-              January 2025, <https://datatracker.ietf.org/doc/html/
-              draft-ietf-rtgwg-net2cloud-problem-statement-42>.
+              Majumdar, "Networks to Cloud DCs: Challenges and
+              Mitigation Practices", Work in Progress, Internet-Draft,
+              draft-ietf-rtgwg-net2cloud-problem-statement-43, 15
+              September 2025, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-rtgwg-net2cloud-problem-statement-43>.
 
    [I-D.draft-ietf-lsvr-bgp-spf]
               Patel, K., Lindem, A., Zandi, S., and W. Henderickx, "BGP
